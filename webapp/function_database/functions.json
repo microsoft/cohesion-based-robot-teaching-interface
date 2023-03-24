@@ -1,0 +1,96 @@
+[
+    {
+        "task_cohesion": {
+            "task_sequence": [
+                "PTG12",
+                "grasp",
+                "PTG11",
+                "PTG12",
+                "PTG12",
+                "PTG12",
+                "PTG13",
+                "release"
+            ],
+            "step_instructions": [
+                "move the hand near the juice",
+                "grasp the juice",
+                "pick up the juice",
+                "take the juice from the shelf",
+                "move the juice",
+                "move the juice into the shelf",
+                "place the juice",
+                "release the juice"
+            ],
+            "object_name": "juice"
+        },
+        "verbal_commands": [
+            "move a juice in the shelf"
+        ]
+    },
+    {
+        "task_cohesion": {
+            "task_sequence": [
+                "PTG12",
+                "grasp",
+                "PTG11",
+                "PTG12",
+                "release"
+            ],
+            "step_instructions": [
+                "move your hand near the rubbish",
+                "grasp the rubbish",
+                "pick up the rubbish",
+                "bring the rubbish",
+                "release the rubbish"
+            ],
+            "object_name": "rubbish"
+        },
+        "verbal_commands": [
+            "throw away rubbish on the table"
+        ]
+    },
+    {
+        "task_cohesion": {
+            "task_sequence": [
+                "PTG12",
+                "grasp",
+                "PTG11",
+                "PTG12",
+                "release"
+            ],
+            "step_instructions": [
+                "move the hand near the spam",
+                "grasp the spam",
+                "pick up the spam",
+                "bring the spam",
+                "release the spam"
+            ],
+            "object_name": "spam"
+        },
+        "verbal_commands": [
+            "throw away a spam on the table"
+        ]
+    },
+    {
+        "task_cohesion": {
+            "task_sequence": [
+                "PTG12",
+                "grasp",
+                "PTG11",
+                "PTG12",
+                "release"
+            ],
+            "step_instructions": [
+                "move your hand near the rubbish",
+                "grasp the rubbish",
+                "pick up the rubbish",
+                "bring the rubbish",
+                "release the rubbish"
+            ],
+            "object_name": "rubbish"
+        },
+        "verbal_commands": [
+            "throw away rubbish on the table"
+        ]
+    }
+]

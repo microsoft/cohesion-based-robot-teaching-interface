@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+        integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
+    <title>Chat</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <style>
+        header {
+            position: sticky;
+            top: 0;
+            background-color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Online robot teaching interface</h1>
+    <!-- Hidden classes. page_loaded, visual_teaching -->
+    <div hidden , id="status" , value="page_loaded"></div>
+    <div hidden , id="previous_status" , value="page_loaded"></div>
+    <div hidden , id="mic_enabled" , value="yes"></div>
+    <header>
+        <div style="margin-bottom:100px" , class="col-lg-8  offset-lg-2">
+            <img src="{{ url_for('video_feed') }}" width="100%">
+        </div>
+    </header>
+
+    <ul id='messages'>
+        <li>Robot [idle]: Hello. What can I do for you today?</li>
+    </ul>
+    <form action="" onsubmit="send_message(event)" id="form" style="display: block" >
+        <input type="text" id="messageText" autocomplete="off" />
+        <button id="sendform">Send</button>
+    </form>
+
+    <button onclick="mute_mic()" id="button_mutemic">mute mic</button>
+    <button onclick="modeSwitchRegister(event)" id="button_register">register an operation</button>
+    <button onclick="modeSwitchTeach(event)" id="button_teach">start teaching</button>
+    <button onclick="reply_yes(event)" id="button_yes">yes</button>
+    <button onclick="reply_no(event)" id="button_no">no</button>
+    <button onclick="capture(event)" id="button_capture">capture</button>
+    <button onclick="finish_capture(event)" id="button_capture_end">capture finish</button>
+    <button onclick="modeSwitchCancel(event)" id="button_cancel">cancel</button>
+
+    <p>
+        <button onclick="start_kinect_recording(event)" id="button_startkinectrecording" disabled>Start video recording</button>
+        <button onclick="stop_kinect_recording(event)" id="button_stopkinectrecording" disabled>Stop video recording</button>
+    </p>
+    <script>
+        const MAX_LENGTH = 50
+        var ws = new WebSocket('ws://localhost:9100/ws/user');
+        //init state
+        disable_buttons()
+        button_register.disabled = false;
+        button_teach.disabled = false;
+        sendform.disabled = false;
+        function process_message(event) {
+            console.log('message arrived');
+            console.log(event.data)
+
+            var command = event.data.split(';')[1]
+            if (event.data.includes("ROBOT_TALKING_START")) {
+                var previous_status = document.getElementById("status").getAttribute('value')
+                document.getElementById("previous_status").setAttribute('value', previous_status)
+                document.getElementById("status").setAttribute('value', 'robot_talking')
+            }
+            else if (event.data.includes("ROBOT_TALKING_FINISH")) { // restore the previous status
+                var previous_status = document.getElementById("previous_status").getAttribute('value')
+                document.getElementById("status").setAttribute('value', previous_status)
+            }
+            else {
+                var messages = document.getElementById('messages');
+                var message = document.createElement('li');
+                var add_message = event.data.split(';')[0]
+                var content = document.createTextNode(add_message);
+                message.appendChild(content);
+                messages.appendChild(message);
+                window.scrollTo(0, document.body.scrollHeight);
+                if (event.data.includes("Robot")) {
+                    //enable_buttons()
+                    if (event.data.includes("[Idle]")) {
+                        document.getElementById("status").setAttribute('value', 'idle')
+                        disable_buttons()
+                        button_register.disabled = false;
+                        button_teach.disabled = false;
+                        sendform.disabled = false;
+                    }
+                    if (event.data.includes("[RegisterOperation")) {
+                        document.getElementById("status").setAttribute('value', 'register_operation')
+                        disable_buttons()
+                        sendform.disabled = false;
+                        button_cancel.disabled = false;
+                        if (event.data.includes("[RegisterOperation_finalize]")) {
+                            document.getElementById("status").setAttribute('value', 'register_operation_finalize')
+                            button_cancel.disabled = true;
+                        }
+                    }
+                    if (event.data.includes("[StartTeaching]")) {
+                        disable_buttons()
+                        if (event.data.includes("What should I do?")) {
+                            document.getElementById("status").setAttribute('value', 'start_teaching_finding_cohesion')
+                            sendform.disabled = false;
+                        }
+                        else {
+                            disable_buttons()
+                            if (event.data.includes("Please do")) {
+                                document.getElementById("status").setAttribute('value', 'start_teaching_visual_feedback')
+                            }
+                            if (event.data.includes("Recording started")) {
+                                button_stopkinectrecording.disabled = false;
+                            }
+                        }
+                    }
+                    if (event.data.includes("Is that correct")) {
+                        document.getElementById("status").setAttribute('value', 'confirmation')
+                        disable_buttons()
+                        button_yes.disabled = false;
+                        button_no.disabled = false;
+                        sendform.disabled = false;
+                    }
+                    if (event.data.includes("[RegisterObject]")) {
+                        document.getElementById("status").setAttribute('value', 'register_object')
+                        disable_buttons()
+                        sendform.disabled = false;
+                        if (event.data.includes("REGISTER_OBJECT")) {
+                            sendform.disabled = true;
+                            button_capture.disabled = false;
+                            button_capture_end.disabled = false;
+                        }
+                    }
+                }
+            }
+        }
+
+        ws.onmessage = process_message;
+
+        function disable_buttons() {
+            sendform.disabled = true;
+            button_yes.disabled = true;
+            button_no.disabled = true;
+            button_register.disabled = true;
+            button_teach.disabled = true;
+            button_cancel.disabled = true;
+            button_capture.disabled = true;
+            button_capture_end.disabled = true;
+            button_startkinectrecording.disabled = true;
+            button_stopkinectrecording.disabled = true;
+        }
+
+        function enable_buttons() {
+            sendform.disabled = false;
+            button_yes.disabled = false;
+            button_no.disabled = false;
+            button_register.disabled = false;
+            button_teach.disabled = false;
+            button_cancel.disabled = false;
+            button_capture.disabled = false;
+            button_capture_end.disabled = false;
+            button_startkinectrecording.disabled = false;
+            button_stopkinectrecording.disabled = false;
+        }
+
+        function mute_mic() {
+            var mic_enabled = document.getElementById("mic_enabled").getAttribute('value')
+            if (mic_enabled == 'yes') {
+                document.getElementById("mic_enabled").setAttribute('value', 'no')
+                document.getElementById("button_mutemic").innerHTML = "Unmute Mic"
+            }
+            else {
+                document.getElementById("mic_enabled").setAttribute('value', 'yes')
+                document.getElementById("button_mutemic").innerHTML = "Mute Mic"
+            }
+        }
+
+        function start_kinect_recording(event) {
+            button_startkinectrecording.disabled = true;
+            button_stopkinectrecording.disabled = false;
+            ws.send('[button-kinect-startrecording]');
+            var input = document.getElementById("messageText");
+            input.value = ''
+            event.preventDefault();
+        }
+
+        function stop_kinect_recording(event) {
+            button_startkinectrecording.disabled = false;
+            button_stopkinectrecording.disabled = true;
+            ws.send('[button-kinect-stoprecording]');
+            var input = document.getElementById("messageText");
+            input.value = ''
+            event.preventDefault();
+        }
+
+        function send_message(event) {
+            var input = document.getElementById("messageText");
+            if (input.value) {
+                console.log('message valid');
+                if (input.value.length > MAX_LENGTH) {
+                    ws.send(input.value.substr(0, MAX_LENGTH))
+                } else {
+                    console.log(input.value);
+                    ws.send(input.value);
+                }
+            }
+            input.value = ''
+            event.preventDefault();
+        }
+
+        function modeSwitchCancel(event) {
+            ws.send('cancel');
+            var input = document.getElementById("messageText");
+            input.value = ''
+            event.preventDefault();
+        }
+        
+        function modeSwitchRegister(event) {
+            ws.send('register');
+            var input = document.getElementById("messageText");
+            input.value = ''
+            event.preventDefault();
+        }
+        
+        function modeSwitchTeach(event) {
+            ws.send('teach');
+            var input = document.getElementById("messageText");
+            input.value = ''
+            event.preventDefault();
+        }
+        
+        function reply_yes(event) {
+            ws.send('Yes');
+            var input = document.getElementById("messageText");
+            input.value = ''
+            event.preventDefault();
+        }
+        
+        function reply_no(event) {
+            ws.send('No');
+            var input = document.getElementById("messageText");
+            input.value = ''
+            event.preventDefault();
+        }
+        
+        function capture(event) {
+            ws.send('[button-capture]');
+            var input = document.getElementById("messageText");
+            input.value = ''
+            event.preventDefault();
+        }
+        
+        function finish_capture(event) {
+            ws.send('[button-capture-finish]');
+            var input = document.getElementById("messageText");
+            input.value = ''
+            event.preventDefault();
+        }
+    </script>

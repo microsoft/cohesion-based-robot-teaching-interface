@@ -1,0 +1,50 @@
+{
+    "_task": "RELEASE",
+    "hand_laterality": {
+        "value": null,
+        "default": "unknown",
+        "type": "string",
+        "description": "the laterality of the manipulating hand" ,
+        "filled_by_daemon": false
+    },
+    "depart_direction": {
+        "value": null,
+        "source": "demostration",
+        "inheritable_entry": "",
+        "default": [0,0,1],
+        "coordinate_system": "world",
+        "type": "vector",
+        "description": "the direction of departure",
+        "filled_by_daemon": false
+    },
+    "start_laban": {
+        "value": null,
+        "source": "demostration",
+        "inheritable_entry": "end_laban",
+        "default": "",
+        "coordinate_system": "user",
+        "type": "labanotation",
+        "description": "the labanotation at the start" ,
+        "filled_by_daemon": false
+    },
+    "end_laban": {
+        "value": null,
+        "source": "demostration",
+        "inheritable_entry": "",
+        "default": "",
+        "coordinate_system": "user",
+        "type": "labanotation",
+        "description": "the labanotation at the end",
+        "filled_by_daemon": false
+    },
+    "end_position": {
+        "value": null,
+        "source": "demostration",
+        "inheritable_entry": "", 
+        "default": [0,0,0],
+        "coordinate_system": "world",
+        "type": "vector",
+        "description": "the hand position at the start",
+        "filled_by_daemon": false
+    }
+}
